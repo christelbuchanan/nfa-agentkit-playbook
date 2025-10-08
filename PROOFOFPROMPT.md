@@ -1221,6 +1221,3 @@ if (result.valid) {
 
 MIT License - see [LICENSE](LICENSE) for details
 
----
-
-**Questions?** Join our [Discord](https://discord.gg/nfa-agentkit) or open an issue on [GitHub](https://github.com/christelbuchanan/nfa-agentkit-playbook) 🚀
