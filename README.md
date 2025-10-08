@@ -7,7 +7,7 @@
 
 ## 🧩 Overview
 
-This playbook provides engineers with everything needed to build **Non-Fungible Agents (NFAs)** integrated with **OpenAI's AgentKit** — combining real-time GPT-5 execution, visual avatars, and verifiable on-chain identity via **BAP-578**.
+This playbook provides engineers with everything needed to build **Non-Fungible Agents (NFAs)** integrated with **OpenAI's AgentKit** , combining real-time GPT-5 execution, visual avatars, and verifiable on-chain identity via the Non-Fungible Agent token standard, **BAP-578**.
 
 It includes:
 - 🔧 Architecture & workflow diagrams  
