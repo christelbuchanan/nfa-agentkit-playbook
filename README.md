@@ -742,8 +742,3 @@ Built with:
 - LiveKit
 - BNB Chain
 
----
-
-**Ready to build the future of AI agents?** 🚀
-
-[Get Started](./docs/getting-started.md) | [View Examples](./examples) | [Join Community](https://discord.gg/nfa-agentkit)
