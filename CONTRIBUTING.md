@@ -52,6 +52,10 @@ We are committed to providing a welcoming and inclusive environment for all cont
 - Publishing others' private information without permission
 - Other conduct which could reasonably be considered inappropriate
 
+### Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project team at **conduct@nfa-agentkit.dev**. All complaints will be reviewed and investigated promptly and fairly.
+
 ---
 
 ## 🚀 Getting Started
