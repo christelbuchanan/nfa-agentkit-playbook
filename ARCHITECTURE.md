@@ -993,6 +993,3 @@ graph TB
 |---------|------|--------|---------|
 | 1.0.0 | 2025-10-07 | Architecture Team | Initial architecture documentation |
 
----
-
-**Questions or feedback?** Open an issue or join our [Discord](https://discord.gg/nfa-agentkit) 🚀
