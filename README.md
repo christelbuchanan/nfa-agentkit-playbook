@@ -722,11 +722,6 @@ gitGraph
 - [Discord Server](https://discord.gg/chatandbuild)
 - [Twitter](https://twitter.com/chatandbuild)
 
-### Examples
-- [Customer Support Bot](./examples/customer-support)
-- [Personal Assistant](./examples/personal-assistant)
-- [Trading Bot](./examples/trading-bot)
-
 ---
 
 ## 📄 License
