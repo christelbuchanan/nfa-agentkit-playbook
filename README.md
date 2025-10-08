@@ -1,324 +1,749 @@
-# NFA × AgentKit Implementation Playbook
-**Date:** 2025-10-07 · **Stack:** GPT‑5 Realtime • AgentKit (Agents SDK) • ChatKit • BAP‑578 (NFA) • Supabase/VectorDB • IPFS
+# 🌐 NFA × AgentKit Implementation Playbook
 
-This playbook gives engineers everything needed to build **Non‑Fungible Agents (NFAs)** that run on **OpenAI’s AgentKit / Agents SDK**, present as **visual avatars**, execute tasks, and anchor identity + provenance on‑chain via **BAP‑578**, with **Proof of Prompt (PoP)** as the verifiability primitive.
-
----
-
-## 0) Quick Links (assets in this repo)
-- Architecture PNG (4K): [`diagrams/NFA_AgentKit_Architecture.png`]
-- Workflows PNG (4K): [`diagrams/NFA_AgentKit_Workflows.png`]
-- Connector Distribution PNG (4K): [`diagrams/NFA_AgentKit_Connector.png`]
-- Templates:
-  - [`templates/companion.json`]
-  - [`templates/travel.json`]
-  - [`templates/research.json`]
-- Metadata Spec: [`metadata/spec_proof_of_prompt.json`]
-
-> Paste the Mermaid blocks below into Notion/GitHub.
+**Date:** October 7, 2025  
+**Stack:** GPT-5 Realtime • AgentKit (Agents SDK) • ChatKit • BAP-578 (NFA) • Supabase/VectorDB • IPFS  
 
 ---
 
-## 1) Full‑Stack Architecture (Mermaid)
-flowchart LR
-  subgraph UI[Client Layer (ChatKit + Avatar)]
-    CK[ChatKit Embed (web/mobile)]
-    AV[Visual Avatar (LiveKit/Hedra)\nVoice (ElevenLabs)]
-    STUDIO[Drag-&-Drop Studio (Agent Builder UI)]
-    CK --- AV
-  end
+## 🧩 Overview
 
-  subgraph EDGE[Edge & Realtime]
-    RTC[WebRTC Gateway]
-    APIGW[API Gateway\nAuth • Rate-limit • Routing]
-    RTC --> APIGW
-  end
+This playbook provides engineers with everything needed to build **Non-Fungible Agents (NFAs)** integrated with **OpenAI's AgentKit** — combining real-time GPT-5 execution, visual avatars, and verifiable on-chain identity via **BAP-578**.
 
-  subgraph AGENTS[Agent Orchestration]
-    AK[OpenAI AgentKit\n(Agents SDK / Responses)]
-    FLOWS[Agent Builder Graphs\n(nodes • skills • guardrails)]
-    EVAL[Evals / Tracing / Telemetry]
-    TEMP[Durable Orchestration\nTemporal / Workers]
-    AK --- FLOWS
-    FLOWS --- EVAL
-    FLOWS --- TEMP
-  end
-
-  subgraph TOOLS[Tools & Connectors]
-    REG[Connector Registry\n(GDrive • GitHub • Web • Supabase • Zendesk • Telegram ...)]
-    FX[Function Tooling\nHTTP APIs • Webhooks • Code sandboxes]
-    REG --- FX
-  end
-
-  subgraph STATE[State & Memory]
-    VDB[Vector DB\n(memories • embeddings)]
-    OBJ[IPFS/S3\n(assets • voices • avatars)]
-    SQL[(Postgres/Supabase)\n(agent configs • sessions)]
-    VDB --- SQL
-    OBJ --- SQL
-  end
-
-  subgraph CHAIN[On-Chain Identity (BAP-578)]
-    BAP[BAP-578 / BEP-007\n(NFA token)]
-    META[On-chain Metadata\n(personaHash • capabilityGraph • versionHistory)]
-    POP[Proof of Prompt\n(Merkle roots of prompt/response traces)]
-    BAP --- META
-    META --- POP
-  end
-
-  subgraph MKT[Marketplace & Commerce]
-    NFA[NFA.xyz Marketplace\n(list • preview • buy/sell)]
-    PAY[Payments & Royalties\n(split to creators/skill authors)]
-    NFA --- PAY
-  end
-
-  CK --> RTC
-  AV --> RTC
-  STUDIO --> APIGW
-
-  APIGW --> AK
-  AK --> REG
-  AK --> FX
-  AK --> VDB
-  AK --> SQL
-  AK --> OBJ
-  AK --> EVAL
-  TEMP --> FX
-
-  AK --> META
-  NFA --> CK
-  NFA --> BAP
-  PAY --> BAP
-  META --> NFA
+It includes:
+- 🔧 Architecture & workflow diagrams  
+- 🧠 Proof of Prompt (PoP) schema  
+- 🚀 API checklists per workflow  
+- 💾 JSON templates for rapid deployment  
 
 ---
 
-## 2) Top 6 Workflows (with on‑chain writes)
+## 📐 Full-Stack Architecture
+
+```mermaid
 flowchart TB
-  subgraph W1[1) Persona Training → Minting]
-    W1a[Conversation & Correction]
-    W1b[Build Capability Graph]
-    W1c[Snapshot Persona/Memory]
-    W1d[[On-chain: personaHash • capabilityGraph • proofOfPromptRoot • version]]
-    W1a --> W1b --> W1c --> W1d
-  end
+    subgraph UI["🎨 Client Layer (ChatKit + Avatar)"]
+        CK["ChatKit Embed<br/>(web/mobile)"]
+        AV["Visual Avatar<br/>(LiveKit)<br/>Voice (GPT-5 Realtime)"]
+        STUDIO["Drag-&-Drop Studio<br/>(Agent Builder UI)"]
+        CK -.-> AV
+    end
 
-  subgraph W2[2) Skill Upgrade / Add-On Marketplace]
-    W2a[Browse/Import Skill Module]
-    W2b[Guardrail Sandbox + Trace Eval]
-    W2c[Activate Skill]
-    W2d[[On-chain: capabilityGraph+ • proofOfPromptRoot(update) • royaltyEvent]]
-    W2a --> W2b --> W2c --> W2d
-  end
+    subgraph EDGE["⚡ Edge & Realtime"]
+        RTC["WebRTC Gateway"]
+        APIGW["API Gateway<br/>Auth • Rate-limit • Routing"]
+        RTC --> APIGW
+    end
 
-  subgraph W3[3) Delegated Task Execution]
-    W3a[Plan ➜ Tool Calls ➜ Checkpoints]
-    W3b[Deliverable / Output]
-    W3c[[On-chain: proofOfPromptRoot(session)]]
-    W3a --> W3b --> W3c
-  end
+    subgraph AGENTS["🤖 Agent Orchestration"]
+        AK["OpenAI AgentKit<br/>(Agents SDK / Responses)"]
+        FLOWS["Agent Builder Graphs<br/>(nodes • skills • guardrails)"]
+        EVAL["Evals / Tracing / Telemetry"]
+        TEMP["Durable Orchestration<br/>Temporal / Workers"]
+        AK --- FLOWS
+        FLOWS --- EVAL
+        FLOWS --- TEMP
+    end
 
-  subgraph W4[4) Avatar-Driven Experience]
-    W4a[Realtime Session (voice/video)]
-    W4b[Interrupt/Barge-in & Multimodal Tools]
-    W4c[[On-chain: avatarConfigHash • voiceIdHash • proofOfPromptRoot(session)]]
-    W4a --> W4b --> W4c
-  end
+    subgraph TOOLS["🔧 Tools & Connectors"]
+        REG["Connector Registry<br/>(GDrive • GitHub • Web<br/>X/Twitter • ChatGPT)"]
+        FX["Function Tooling<br/>HTTP APIs • Webhooks<br/>Code sandboxes"]
+        REG --- FX
+    end
 
-  subgraph W5[5) Multi-Agent Collaboration]
-    W5a[Decompose Task]
-    W5b[Handoffs Between Specialists]
-    W5c[Aggregate & Review]
-    W5d[[On-chain: bundle.links • proofOfPromptRoot(merged)]]
-    W5a --> W5b --> W5c --> W5d
-  end
+    subgraph STATE["💾 State & Memory"]
+        VDB["Vector DB<br/>(memories • embeddings)"]
+        OBJ["IPFS/S3<br/>(assets • voices • avatars)"]
+        SQL[("Postgres/Supabase<br/>(agent configs • sessions)")]
+        VDB --- SQL
+        OBJ --- SQL
+    end
 
-  subgraph W6[6) Evaluation / Audit / Versioning]
-    W6a[Run Eval Suites + Scoring]
-    W6b[Threshold Gate ➜ Rollback/Version Bump]
-    W6c[[On-chain: evalRootHash • versionHistory[]]]
-    W6a --> W6b --> W6c
-  end
+    subgraph CHAIN["⛓️ On-Chain Identity (BAP-578)"]
+        BAP["BAP-578<br/>(NFA token)"]
+        META["On-chain Metadata<br/>(personaHash • capabilityGraph<br/>versionHistory)"]
+        POP["Proof of Prompt<br/>(Merkle roots of<br/>prompt/response traces)"]
+        BAP --- META
+        META --- POP
+    end
+
+    subgraph MKT["🛒 Marketplace & Commerce"]
+        NFA["NFA.xyz Marketplace<br/>(list • preview • buy/sell)"]
+        PAY["Payments & Royalties<br/>(split to creators/skill authors)"]
+        NFA --- PAY
+    end
+
+    CK --> RTC
+    AV --> RTC
+    STUDIO --> APIGW
+    APIGW --> AK
+    AK --> REG
+    AK --> FX
+    AK --> VDB
+    AK --> SQL
+    AK --> OBJ
+    AK --> EVAL
+    TEMP --> FX
+    AK --> META
+    NFA --> CK
+    NFA --> BAP
+    PAY --> BAP
+    META --> NFA
+
+    style CHAIN fill:#f3fff6,stroke:#12b886,stroke-width:3px
+    style UI fill:#fff5f5,stroke:#FF005C,stroke-width:3px
+    style AGENTS fill:#f0f9ff,stroke:#00F0FF,stroke-width:3px
+    style MKT fill:#fffbeb,stroke:#f59e0b,stroke-width:3px
+```
 
 ---
 
-## 3) NFA as Connector (distribution via Agents SDK)
+## 🔄 Core Workflows
+
+### 1️⃣ Agent Creation & Deployment
+
+```mermaid
+sequenceDiagram
+    participant Creator
+    participant Studio
+    participant AgentKit
+    participant BAP578
+    participant IPFS
+    participant Marketplace
+
+    Creator->>Studio: Design agent (persona + skills)
+    Studio->>Studio: Configure guardrails & tools
+    Studio->>AgentKit: Deploy agent graph
+    AgentKit->>AgentKit: Generate capability hash
+    AgentKit->>IPFS: Upload avatar/voice assets
+    IPFS-->>AgentKit: Return CID
+    AgentKit->>BAP578: Mint NFA token
+    BAP578->>BAP578: Store metadata on-chain
+    BAP578-->>Creator: Return token ID
+    Creator->>Marketplace: List agent for sale
+    Marketplace-->>Creator: Agent live & discoverable
+```
+
+### 2️⃣ Real-Time Conversation Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant ChatKit
+    participant WebRTC
+    participant AgentKit
+    participant GPT5
+    participant VectorDB
+    participant BAP578
+
+    User->>ChatKit: Start conversation
+    ChatKit->>WebRTC: Establish audio/video stream
+    WebRTC->>AgentKit: Route to agent instance
+    AgentKit->>BAP578: Verify agent identity
+    BAP578-->>AgentKit: Return capabilities
+    AgentKit->>VectorDB: Retrieve conversation history
+    VectorDB-->>AgentKit: Return context
+    AgentKit->>GPT5: Send prompt + context
+    GPT5-->>AgentKit: Stream response
+    AgentKit->>AgentKit: Log interaction (PoP)
+    AgentKit->>WebRTC: Stream audio/video
+    WebRTC->>ChatKit: Render avatar response
+    ChatKit-->>User: Display conversation
+```
+
+### 3️⃣ Proof of Prompt (PoP) Generation
+
+```mermaid
 flowchart LR
-  APP[OpenAI Agent / ChatGPT App] --> SDK[Agents SDK\n(Agent • Tool • Session)]
-  SDK --> CONN[NFA Connector (MCP server)\ninvoke | getMemory | useSkill]
-  CONN --> RUNTIME[NFA Runtime\nGPT-5 Realtime • Skills • Guardrails]
-  RUNTIME --> STORE[(Supabase/Vector/IPFS)]
-  RUNTIME --> CHAIN[[BAP-578\nmetadata + proofOfPromptRoot + royalties]]
-
-  subgraph Registry[Connector Registry / App Listing]
-    LIST[NFA Connector Manifest\n(name • version • schema • auth • royalties)]
-  end
-  LIST --- CONN
-
-  SDK -->|discovery| Registry
-
----
-
-## 4) API Checklists (per-lane, copy‑paste)
-
-**All lanes:** persist **Proof of Prompt (PoP)** → per step hash → Merkle root → write `proofOfPromptRoot` to BAP‑578 metadata.
-
-### 4.1 Persona Training → Minting
-- **Inputs:** `user_id`, `persona_template_id`, `system_prompt`, `memory_delta[]`, `skill_ids[]`, `eval_suite_id`
-- **Nodes/Tools:** `ConversationLoop`, `CorrectionApply`, `SkillAttach`, `EvalRun`; tools: `memory.write`, `skills.attach`, `evals.run`
-- **On‑chain:** `personaHash`, `capabilityGraph`, `proofOfPromptRoot`, `version`
-
-### 4.2 Skill Upgrade / Add‑On Marketplace
-- **Inputs:** `agent_id`, `skill_module_id@version`, `license_ref`, `sandbox_flag`
-- **Nodes/Tools:** `SkillImport`, `GuardrailSandbox`, `TraceEval`, `Activate`; tools: `skills.install`, `guardrails.validate`
-- **On‑chain:** `capabilityGraph+`, updated `proofOfPromptRoot`, `royaltyEvent`
-
-### 4.3 Delegated Task Execution
-- **Inputs:** `agent_id`, `task_type`, `payload`, `schedule?`
-- **Nodes/Tools:** `Plan`, `ToolInvoke`, `Checkpoint`, `Deliver`; connectors: `web.search`, `github.commit`, `telegram.post`, etc.
-- **On‑chain:** session `proofOfPromptRoot` (prompt/response + tool‑IO digests)
-
-### 4.4 Avatar‑Driven Interactive Experience
-- **Inputs:** `agent_id`, `session_token`, `rtc_offer`, `voice_id`, `avatar_cfg_id`
-- **Nodes/Tools:** `RealtimeSession`, `BargeIn/Repair`, `Vision/ASR/TTS`
-- **On‑chain:** `avatarConfigHash`, `voiceIdHash`, session `proofOfPromptRoot`
-
-### 4.5 Multi‑Agent Collaboration (Team Agent)
-- **Inputs:** `team_id`, `agent_ids[]`, `handoff_policy`, `task_spec`
-- **Nodes/Tools:** `Decompose`, `Handoff`, `Aggregate`, `Review`
-- **On‑chain:** `bundle.links`, merged `proofOfPromptRoot`
-
-### 4.6 Evaluation / Audit / Versioning
-- **Inputs:** `agent_id`, `eval_suite_id`, `schedule_cron`, `rollback_policy`
-- **Nodes/Tools:** `EvalRun`, `Score`, `ThresholdGate`, `Rollback/Bump`
-- **On‑chain:** `evalRootHash`, `versionHistory[]`
+    A["User Prompt"] --> B["Hash Prompt"]
+    C["Agent Response"] --> D["Hash Response"]
+    E["Timestamp"] --> F["Hash Timestamp"]
+    G["Agent ID"] --> H["Hash Agent ID"]
+    
+    B --> I["Combine Hashes"]
+    D --> I
+    F --> I
+    H --> I
+    
+    I --> J["Generate Merkle Root"]
+    J --> K["Store on BAP-578"]
+    K --> L["Immutable Proof"]
+    
+    style L fill:#f3fff6,stroke:#12b886,stroke-width:3px
+```
 
 ---
 
-## 5) Starter AgentKit Templates (easy wins)
+## 🏗️ Component Breakdown
 
-### 5.1 Companion Agent (realtime + memory)
-{
-  "name": "Companion",
-  "model": "gpt-5-realtime-preview",
-  "system": "Supportive, concise, safe. Remember key facts judiciously.",
-  "nodes": [
-    { "id":"realtime","type":"RealtimeSession" },
-    { "id":"guard","type":"Guardrail","profile":"default_companion" },
-    { "id":"memWrite","type":"Tool","ref":"memory.write" },
-    { "id":"pop","type":"Hook","action":"persist_proof_of_prompt" }
-  ],
-  "edges": [
-    ["realtime","guard"], ["guard","memWrite"], ["memWrite","pop"]
-  ],
-  "tools": {
-    "memory.write": { "endpoint": "https://api.chatandbuild.com/memory/write" }
-  }
-}
+### 🎨 Client Layer
 
-### 5.2 Travel Booking Agent (search → plan → confirm)
-{
-  "name": "TravelPlanner",
-  "model": "gpt-5",
-  "system": "Plan options; always ask user to CONFIRM before booking; sandbox=true by default.",
-  "nodes": [
-    { "id":"gather","type":"Prompt","prompt":"Collect origin, destination, dates, budget, prefs." },
-    { "id":"search","type":"Tool","ref":"travel.search" },
-    { "id":"plan","type":"Reason" },
-    { "id":"confirm","type":"Guardrail","policy":"require_token_CONFIRM" },
-    { "id":"pay","type":"Tool","ref":"payments.charge","params":{"sandbox":true} },
-    { "id":"pop","type":"Hook","action":"persist_proof_of_prompt" }
-  ],
-  "edges": [
-    ["gather","search"], ["search","plan"], ["plan","confirm"], ["confirm","pay"], ["pay","pop"]
-  ],
-  "tools": {
-    "travel.search": { "endpoint":"https://api.chatandbuild.com/travel/search" },
-    "payments.charge": { "endpoint":"https://api.chatandbuild.com/payments/charge" }
-  }
-}
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **ChatKit** | React/Next.js | Embeddable chat interface |
+| **Avatar Engine** | LiveKit + GPT-5 Realtime | Real-time voice & video |
+| **Agent Studio** | Drag-and-drop UI | Visual agent builder |
 
-### 5.3 Research Agent (sources → cluster → summary)
-{
-  "name": "Researcher",
-  "model": "gpt-5",
-  "system": "Gather diverse sources, de-duplicate, provide balanced summary with citations.",
-  "nodes": [
-    { "id":"expand","type":"Prompt","prompt":"Derive targeted queries and synonyms." },
-    { "id":"search","type":"Tool","ref":"web.search" },
-    { "id":"fetch","type":"Tool","ref":"web.fetch" },
-    { "id":"cluster","type":"EmbeddingCluster" },
-    { "id":"write","type":"Reason","style":"markdown_with_citations" },
-    { "id":"export","type":"Tool","ref":"export.markdown" },
-    { "id":"pop","type":"Hook","action":"persist_proof_of_prompt" }
-  ],
-  "edges": [
-    ["expand","search"], ["search","fetch"], ["fetch","cluster"], ["cluster","write"], ["write","export"], ["export","pop"]
-  ],
-  "tools": {
-    "web.search": { "endpoint":"https://api.chatandbuild.com/search" },
-    "web.fetch": { "endpoint":"https://api.chatandbuild.com/fetch" },
-    "export.markdown": { "endpoint":"https://api.chatandbuild.com/export/md" }
-  }
-}
+### 🤖 Agent Orchestration
 
-> **Tip:** convert these JSONs into AgentKit’s native graph import format or recreate them in the visual Builder.
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **AgentKit** | OpenAI Agents SDK | Core agent runtime |
+| **Agent Graphs** | Node-based workflows | Skill composition |
+| **Guardrails** | Custom validators | Safety & compliance |
+| **Temporal** | Durable execution | Long-running workflows |
 
----
+### 🔧 Tools & Connectors
 
-## 6) Proof of Prompt (PoP) – Mini Spec
+```mermaid
+mindmap
+  root((Connector<br/>Registry))
+    Data Sources
+      Google Drive
+      GitHub
+      Notion
+      Supabase
+    Communication
+      Telegram
+      Slack
+      Email
+    Commerce
+      Stripe
+      Shopify
+    AI Services
+      ChatGPT
+      Claude
+    Web
+      HTTP APIs
+      Webhooks
+      Web Scraping
+```
 
-- **Scope:** per session, per critical step; include `prompt`, `response_summary`, `tool_io_digest` (hash of tool inputs/outputs, not raw data).
-- **Storage:** raw traces off‑chain (IPFS or encrypted S3). On‑chain stores **Merkle root only**.
-- **BAP‑578 metadata keys:**
-  - `proofOfPromptRoot`
-  - `proofOfPromptUri` (optional pointer to trace bundle)
-  - `personaHash`, `capabilityGraph`, `version`, `evalRootHash?`
+### 💾 State & Memory
 
-**Off‑chain record example**
-{
-  "agentId": "NFA-888",
-  "sessionId": "sess_7f1",
-  "steps": [
-    {
-      "ts": "2025-10-07T17:05:11Z",
-      "prompt": "Plan trip SFO→FCO, 4 days, budget $2k.",
-      "response_summary": "Three itineraries; Option A under $1.9k.",
-      "tool_io_digest": "0x9b1c...cafe"
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Vector DB** | Pinecone/Weaviate | Semantic memory |
+| **Object Storage** | IPFS/S3 | Assets & media |
+| **Relational DB** | Supabase (Postgres) | Structured data |
+
+### ⛓️ On-Chain Identity (BAP-578)
+
+```mermaid
+classDiagram
+    class NFAToken {
+        +uint256 tokenId
+        +address owner
+        +string personaHash
+        +string capabilityGraph
+        +uint256 version
+        +mint()
+        +transfer()
+        +updateMetadata()
     }
-  ],
-  "merkleRoot": "0xabc123...ff9",
-  "hashAlgo": "sha256"
+    
+    class ProofOfPrompt {
+        +bytes32 merkleRoot
+        +uint256 timestamp
+        +uint256 interactionCount
+        +addProof()
+        +verifyProof()
+    }
+    
+    class Metadata {
+        +string name
+        +string description
+        +string avatarCID
+        +string voiceCID
+        +string[] skills
+        +getMetadata()
+    }
+    
+    NFAToken "1" --> "1" Metadata
+    NFAToken "1" --> "*" ProofOfPrompt
+```
+
+---
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+
+```bash
+# Required tools
+node >= 18.0.0
+npm >= 9.0.0
+git
+docker (optional)
+```
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/nfa-agentkit.git
+cd nfa-agentkit
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys:
+# - OPENAI_API_KEY
+# - SUPABASE_URL
+# - SUPABASE_ANON_KEY
+# - IPFS_API_KEY
+# - BAP578_CONTRACT_ADDRESS
+
+# Run database migrations
+npm run db:migrate
+
+# Start development server
+npm run dev
+```
+
+### Create Your First Agent
+
+```typescript
+import { AgentKit } from '@openai/agentkit';
+import { BAP578 } from './contracts/BAP578';
+
+// 1. Initialize AgentKit
+const agent = new AgentKit({
+  model: 'gpt-5-realtime',
+  tools: ['web-search', 'calculator', 'email'],
+  guardrails: {
+    maxTokens: 4000,
+    contentFilter: true,
+    rateLimits: { rpm: 60 }
+  }
+});
+
+// 2. Configure persona
+agent.setPersona({
+  name: 'TechSupport AI',
+  description: 'Expert technical support agent',
+  voice: 'professional-friendly',
+  avatar: 'ipfs://QmX...'
+});
+
+// 3. Mint NFA token
+const nfa = await BAP578.mint({
+  owner: '0x...',
+  personaHash: agent.getPersonaHash(),
+  capabilityGraph: agent.getCapabilityGraph()
+});
+
+// 4. Deploy agent
+await agent.deploy({
+  nfaTokenId: nfa.tokenId,
+  endpoint: 'wss://agents.yourapp.com'
+});
+
+console.log(`Agent deployed! Token ID: ${nfa.tokenId}`);
+```
+
+---
+
+## 📊 Proof of Prompt (PoP) Schema
+
+### Data Structure
+
+```json
+{
+  "popId": "pop_abc123xyz",
+  "agentTokenId": "42",
+  "timestamp": "2025-10-07T14:30:00Z",
+  "interaction": {
+    "promptHash": "0x1a2b3c...",
+    "responseHash": "0x4d5e6f...",
+    "contextHash": "0x7g8h9i...",
+    "toolsUsed": ["web-search", "calculator"],
+    "duration": 2.3,
+    "tokens": {
+      "input": 150,
+      "output": 320
+    }
+  },
+  "merkleProof": {
+    "root": "0xabc123...",
+    "path": ["0xdef456...", "0xghi789..."],
+    "leaf": "0xjkl012..."
+  },
+  "signature": "0x9876543210...",
+  "verified": true
 }
+```
+
+### Merkle Tree Construction
+
+```mermaid
+graph TB
+    A["Interaction 1"] --> E["Hash 1-2"]
+    B["Interaction 2"] --> E
+    C["Interaction 3"] --> F["Hash 3-4"]
+    D["Interaction 4"] --> F
+    E --> G["Merkle Root"]
+    F --> G
+    G --> H["Store on BAP-578"]
+    
+    style G fill:#f3fff6,stroke:#12b886,stroke-width:3px
+    style H fill:#fff5f5,stroke:#FF005C,stroke-width:3px
+```
 
 ---
 
-## 7) Definition of Done (per sample)
+## 🔌 API Reference
 
-- **Companion:** realtime chat OK; memory writes verified; session PoP stored; avatar latency < 400ms p50.
-- **Travel:** search → plan → confirm (sandbox charge); PoP root + itinerary export.
-- **Research:** ≥ 8 sources → clustered → summary with citations; PoP + MD/PDF export.
+### AgentKit Core APIs
+
+#### Create Agent
+
+```http
+POST /api/agents
+Content-Type: application/json
+
+{
+  "name": "Customer Support Bot",
+  "model": "gpt-5-realtime",
+  "persona": {
+    "tone": "friendly",
+    "expertise": ["product-support", "billing"]
+  },
+  "tools": ["zendesk", "stripe", "email"],
+  "guardrails": {
+    "maxTokens": 4000,
+    "contentFilter": true
+  }
+}
+```
+
+#### Start Conversation
+
+```http
+POST /api/conversations
+Content-Type: application/json
+
+{
+  "agentId": "agent_123",
+  "userId": "user_456",
+  "channel": "web",
+  "context": {
+    "previousMessages": [],
+    "userProfile": {}
+  }
+}
+```
+
+#### Generate PoP
+
+```http
+POST /api/proof-of-prompt
+Content-Type: application/json
+
+{
+  "agentTokenId": "42",
+  "interactions": [
+    {
+      "prompt": "What's the weather?",
+      "response": "It's sunny, 72°F",
+      "timestamp": "2025-10-07T14:30:00Z"
+    }
+  ]
+}
+```
+
+### BAP-578 Smart Contract APIs
+
+#### Mint NFA
+
+```solidity
+function mint(
+  address owner,
+  string memory personaHash,
+  string memory capabilityGraph
+) public returns (uint256 tokenId)
+```
+
+#### Update Metadata
+
+```solidity
+function updateMetadata(
+  uint256 tokenId,
+  string memory newPersonaHash,
+  uint256 version
+) public onlyOwner
+```
+
+#### Add Proof of Prompt
+
+```solidity
+function addProof(
+  uint256 tokenId,
+  bytes32 merkleRoot,
+  uint256 interactionCount
+) public
+```
 
 ---
 
-## 8) Security, Compliance, and Ops
+## 🛠️ Development Checklist
 
-- **Auth:** wallet signature + connector tokens; per‑tool ACLs.
-- **Guardrails:** sanitize inputs; confirmation tokens for sensitive ops (payments/DMs).
-- **Durability:** Temporal workers for retries/idempotency.
-- **Observability:** AgentKit traces + Grafana dashboards; error budgets by lane.
-- **Economics:** `RoyaltyPaid` events; usage metering; creator splits for skills/modules.
+### Phase 1: Foundation
+- [ ] Set up AgentKit SDK
+- [ ] Configure Supabase database
+- [ ] Deploy BAP-578 smart contract
+- [ ] Set up IPFS node
+- [ ] Create ChatKit embed
+
+### Phase 2: Core Features
+- [ ] Implement agent builder UI
+- [ ] Build connector registry
+- [ ] Set up vector database
+- [ ] Integrate GPT-5 Realtime
+- [ ] Add avatar rendering
+
+### Phase 3: On-Chain Integration
+- [ ] Implement NFA minting
+- [ ] Build PoP generation system
+- [ ] Create metadata storage
+- [ ] Add verification endpoints
+
+### Phase 4: Marketplace
+- [ ] Build listing interface
+- [ ] Implement payment system
+- [ ] Add royalty distribution
+- [ ] Create preview system
+
+### Phase 5: Production
+- [ ] Load testing
+- [ ] Security audit
+- [ ] Documentation
+- [ ] Launch marketing
 
 ---
 
-## 9) Roadmap (suggested)
-- **P1:** NFA Connector (MCP) prototype + Companion template live
-- **P2:** Travel + Research templates; on‑chain PoP writes
-- **P3:** Connector Registry submission + ChatGPT app listing
-- **P4:** Skill Marketplace (royalties) + Eval leaderboards
-- **P5:** Federation across partner ecosystems
+## 🎯 Use Cases
+
+### 1. Customer Support Agent
+
+```mermaid
+flowchart LR
+    A["Customer Query"] --> B["NFA Agent"]
+    B --> C{"Query Type?"}
+    C -->|Technical| D["Knowledge Base"]
+    C -->|Billing| E["Stripe API"]
+    C -->|General| F["GPT-5"]
+    D --> G["Response"]
+    E --> G
+    F --> G
+    G --> H["Log PoP"]
+    H --> I["Customer"]
+```
+
+### 2. Personal Assistant
+
+```mermaid
+flowchart LR
+    A["User Request"] --> B["NFA Agent"]
+    B --> C{"Task Type?"}
+    C -->|Schedule| D["Calendar API"]
+    C -->|Email| E["Gmail API"]
+    C -->|Research| F["Web Search"]
+    D --> G["Execute"]
+    E --> G
+    F --> G
+    G --> H["Confirm"]
+    H --> I["User"]
+```
+
+### 3. Trading Bot
+
+```mermaid
+flowchart LR
+    A["Market Data"] --> B["NFA Agent"]
+    B --> C["Analyze Trends"]
+    C --> D{"Signal?"}
+    D -->|Buy| E["Execute Trade"]
+    D -->|Sell| E
+    D -->|Hold| F["Wait"]
+    E --> G["Log PoP"]
+    G --> H["Update Portfolio"]
+```
 
 ---
 
-### License / Notes
-Internal use. Replace endpoints with your infra. Align with OpenAI Agents SDK updates as they ship.
+## 🔐 Security Best Practices
+
+### Authentication & Authorization
+
+```typescript
+// Implement JWT-based auth
+import { verifyToken } from './auth';
+
+app.use(async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  
+  try {
+    const user = await verifyToken(token);
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(403).json({ error: 'Invalid token' });
+  }
+});
+```
+
+### Rate Limiting
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests, please try again later'
+});
+
+app.use('/api/', limiter);
+```
+
+### Input Validation
+
+```typescript
+import { z } from 'zod';
+
+const agentSchema = z.object({
+  name: z.string().min(3).max(50),
+  model: z.enum(['gpt-5-realtime', 'gpt-4-turbo']),
+  tools: z.array(z.string()).max(10),
+  guardrails: z.object({
+    maxTokens: z.number().min(100).max(8000),
+    contentFilter: z.boolean()
+  })
+});
+
+app.post('/api/agents', async (req, res) => {
+  const result = agentSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ errors: result.error.errors });
+  }
+  // Process valid data
+});
+```
+
+---
+
+## 📈 Monitoring & Analytics
+
+### Key Metrics
+
+```mermaid
+graph LR
+    A["Metrics"] --> B["Agent Performance"]
+    A --> C["User Engagement"]
+    A --> D["System Health"]
+    
+    B --> B1["Response Time"]
+    B --> B2["Accuracy Rate"]
+    B --> B3["Tool Usage"]
+    
+    C --> C1["Active Users"]
+    C --> C2["Conversation Length"]
+    C --> C3["Satisfaction Score"]
+    
+    D --> D1["API Latency"]
+    D --> D2["Error Rate"]
+    D --> D3["Uptime"]
+```
+
+### Telemetry Setup
+
+```typescript
+import { trace } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('nfa-agentkit');
+
+async function handleConversation(agentId: string, message: string) {
+  const span = tracer.startSpan('conversation.handle');
+  
+  try {
+    span.setAttribute('agent.id', agentId);
+    span.setAttribute('message.length', message.length);
+    
+    const response = await agent.process(message);
+    
+    span.setAttribute('response.tokens', response.tokens);
+    span.setStatus({ code: 0 }); // Success
+    
+    return response;
+  } catch (error) {
+    span.setStatus({ code: 2, message: error.message });
+    throw error;
+  } finally {
+    span.end();
+  }
+}
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+```mermaid
+gitGraph
+    commit id: "Initial commit"
+    branch feature/new-connector
+    checkout feature/new-connector
+    commit id: "Add connector scaffold"
+    commit id: "Implement API calls"
+    commit id: "Add tests"
+    checkout main
+    merge feature/new-connector
+    commit id: "Release v1.1.0"
+```
+
+---
+
+## 📚 Resources
+
+### Documentation
+- [AgentKit SDK Docs](https://platform.openai.com/docs/agents)
+- [BAP-578 Specification](https://github.com/ChatAndBuild/non-fungible-agents-BAP-578)
+- [ChatKit Integration Guide](https://docs.chatkit.io)
+- [Supabase Docs](https://supabase.com/docs)
+
+### Community
+- [Discord Server](https://discord.gg/chatandbuild)
+- [Twitter](https://twitter.com/chatandbuild)
+
+### Examples
+- [Customer Support Bot](./examples/customer-support)
+- [Personal Assistant](./examples/personal-assistant)
+- [Trading Bot](./examples/trading-bot)
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- OpenAI AgentKit
+- LiveKit
+- BNB Chain
+
+---
+
+**Ready to build the future of AI agents?** 🚀
+
+[Get Started](./docs/getting-started.md) | [View Examples](./examples) | [Join Community](https://discord.gg/nfa-agentkit)
