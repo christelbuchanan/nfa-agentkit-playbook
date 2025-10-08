@@ -7,7 +7,7 @@
 
 ## 🧩 Overview
 
-This playbook provides engineers with everything needed to build **Non-Fungible Agents (NFAs)** integrated with **OpenAI's AgentKit** , combining real-time GPT-5 execution, visual avatars, and verifiable on-chain identity via the Non-Fungible Agent token standard, **BAP-578**.
+This playbook provides engineers with everything needed to build **Non-Fungible Agents (NFAs)** integrated with **OpenAI's AgentKit** — combining real-time GPT-5 execution, visual avatars, and verifiable on-chain identity via **BAP-578**.
 
 It includes:
 - 🔧 Architecture & workflow diagrams  
@@ -45,7 +45,7 @@ flowchart TB
     end
 
     subgraph TOOLS["🔧 Tools & Connectors"]
-        REG["Connector Registry<br/>(GDrive • GitHub • Web<br/>X/Twitter • ChatGPT)"]
+        REG["Connector Registry<br/>(GDrive • GitHub • Web<br/>Supabase • Zendesk • Telegram)"]
         FX["Function Tooling<br/>HTTP APIs • Webhooks<br/>Code sandboxes"]
         REG --- FX
     end
@@ -59,7 +59,7 @@ flowchart TB
     end
 
     subgraph CHAIN["⛓️ On-Chain Identity (BAP-578)"]
-        BAP["BAP-578<br/>(NFA token)"]
+        BAP["BAP-578 / BEP-007<br/>(NFA token)"]
         META["On-chain Metadata<br/>(personaHash • capabilityGraph<br/>versionHistory)"]
         POP["Proof of Prompt<br/>(Merkle roots of<br/>prompt/response traces)"]
         BAP --- META
@@ -206,12 +206,15 @@ mindmap
       Telegram
       Slack
       Email
+      SMS
     Commerce
       Stripe
       Shopify
+      PayPal
     AI Services
-      ChatGPT
-      Claude
+      DALL-E
+      Whisper
+      Vision API
     Web
       HTTP APIs
       Webhooks
@@ -714,13 +717,19 @@ gitGraph
 
 ### Documentation
 - [AgentKit SDK Docs](https://platform.openai.com/docs/agents)
-- [BAP-578 Specification](https://github.com/ChatAndBuild/non-fungible-agents-BAP-578)
+- [BAP-578 Specification](https://github.com/bitcoin-sv/baps/blob/master/bap/0578.md)
 - [ChatKit Integration Guide](https://docs.chatkit.io)
 - [Supabase Docs](https://supabase.com/docs)
 
 ### Community
-- [Discord Server](https://discord.gg/chatandbuild)
-- [Twitter](https://twitter.com/chatandbuild)
+- [Discord Server](https://discord.gg/nfa-agentkit)
+- [GitHub Discussions](https://github.com/your-org/nfa-agentkit/discussions)
+- [Twitter](https://twitter.com/nfa_agentkit)
+
+### Examples
+- [Customer Support Bot](./examples/customer-support)
+- [Personal Assistant](./examples/personal-assistant)
+- [Trading Bot](./examples/trading-bot)
 
 ---
 
@@ -734,6 +743,14 @@ MIT License - see [LICENSE](LICENSE) for details
 
 Built with:
 - OpenAI AgentKit
+- Supabase
+- IPFS
 - LiveKit
-- BNB Chain
+- Temporal
+- And many other amazing open-source projects
 
+---
+
+**Ready to build the future of AI agents?** 🚀
+
+[Get Started](./docs/getting-started.md) | [View Examples](./examples) | [Join Community](https://discord.gg/nfa-agentkit)
