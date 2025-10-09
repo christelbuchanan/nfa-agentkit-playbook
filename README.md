@@ -20,79 +20,69 @@ It includes:
 ## 📐 Full-Stack Architecture
 
 ```mermaid
-flowchart TB
-    subgraph UI["🎨 Client Layer (ChatKit + Avatar)"]
-        CK["ChatKit Embed<br/>(web/mobile)"]
-        AV["Visual Avatar<br/>(LiveKit)<br/>Voice (GPT-5 Realtime)"]
-        STUDIO["Drag-&-Drop Studio<br/>(Agent Builder UI)"]
-        CK -.-> AV
+graph TB
+    subgraph CLIENT["🎨 Client Layer"]
+        WEB["Web UI<br/>(Next.js)"]
+        MOBILE["Mobile App<br/>(React Native)"]
+        CHATKIT["ChatKit Embed<br/>(iframe/SDK)"]
+        AVATAR["Avatar Engine<br/>(LiveKit + GPT-5)"]
     end
 
-    subgraph EDGE["⚡ Edge & Realtime"]
-        RTC["WebRTC Gateway"]
-        APIGW["API Gateway<br/>Auth • Rate-limit • Routing"]
-        RTC --> APIGW
+    subgraph SERVICE["⚡ Service Layer"]
+        APIGW["API Gateway<br/>(K8s/Nginx)<br/>Auth • Rate Limiting"]
+        
+        AGENTKIT["AgentKit Runtime<br/>(OpenAI SDK)"]
+        BUILDER["Agent Builder<br/>(Graph Engine)"]
+        WORKFLOW["Workflow Engine<br/>(Temporal)"]
+        
+        GPT5["GPT-5 Realtime"]
+        CONNECTORS["Connector Pool<br/>(Zendesk • Stripe • Email)"]
+        TOOLS["Tool Executor<br/>(Sandboxed)"]
     end
 
-    subgraph AGENTS["🤖 Agent Orchestration"]
-        AK["OpenAI AgentKit<br/>(Agents SDK / Responses)"]
-        FLOWS["Agent Builder Graphs<br/>(nodes • skills • guardrails)"]
-        EVAL["Evals / Tracing / Telemetry"]
-        TEMP["Durable Orchestration<br/>Temporal / Workers"]
-        AK --- FLOWS
-        FLOWS --- EVAL
-        FLOWS --- TEMP
+    subgraph DATA["💾 Data Layer"]
+        POSTGRES[("PostgreSQL<br/>(Supabase)")]
+        VECTOR[("Vector DB<br/>(Pinecone)")]
+        REDIS[("Redis<br/>(Cache)")]
+        IPFS[("IPFS<br/>(Assets)")]
+        
+        BAP578["BAP-578<br/>(NFA Contract)"]
+        INDEXER["Chain Indexer"]
     end
 
-    subgraph TOOLS["🔧 Tools & Connectors"]
-        REG["Connector Registry<br/>(GDrive • GitHub • Web<br/>Supabase • Zendesk • Telegram)"]
-        FX["Function Tooling<br/>HTTP APIs • Webhooks<br/>Code sandboxes"]
-        REG --- FX
+    subgraph INFRA["🔧 Infrastructure Layer"]
+        MONITOR["Monitoring<br/>(Prometheus)"]
+        LOGS["Logs<br/>(Loki)"]
+        CDN["CDN<br/>(CloudFlare)"]
     end
 
-    subgraph STATE["💾 State & Memory"]
-        VDB["Vector DB<br/>(memories • embeddings)"]
-        OBJ["IPFS/S3<br/>(assets • voices • avatars)"]
-        SQL[("Postgres/Supabase<br/>(agent configs • sessions)")]
-        VDB --- SQL
-        OBJ --- SQL
-    end
+    WEB --> APIGW
+    MOBILE --> APIGW
+    CHATKIT --> APIGW
+    AVATAR --> APIGW
+    
+    APIGW --> AGENTKIT
+    AGENTKIT --> BUILDER
+    AGENTKIT --> WORKFLOW
+    AGENTKIT --> GPT5
+    AGENTKIT --> CONNECTORS
+    AGENTKIT --> TOOLS
+    
+    AGENTKIT --> POSTGRES
+    AGENTKIT --> VECTOR
+    AGENTKIT --> REDIS
+    AGENTKIT --> IPFS
+    AGENTKIT --> BAP578
+    BAP578 --> INDEXER
+    
+    SERVICE --> MONITOR
+    SERVICE --> LOGS
+    APIGW --> CDN
 
-    subgraph CHAIN["⛓️ On-Chain Identity (BAP-578)"]
-        BAP["BAP-578 / BEP-007<br/>(NFA token)"]
-        META["On-chain Metadata<br/>(personaHash • capabilityGraph<br/>versionHistory)"]
-        POP["Proof of Prompt<br/>(Merkle roots of<br/>prompt/response traces)"]
-        BAP --- META
-        META --- POP
-    end
-
-    subgraph MKT["🛒 Marketplace & Commerce"]
-        NFA["NFA.xyz Marketplace<br/>(list • preview • buy/sell)"]
-        PAY["Payments & Royalties<br/>(split to creators/skill authors)"]
-        NFA --- PAY
-    end
-
-    CK --> RTC
-    AV --> RTC
-    STUDIO --> APIGW
-    APIGW --> AK
-    AK --> REG
-    AK --> FX
-    AK --> VDB
-    AK --> SQL
-    AK --> OBJ
-    AK --> EVAL
-    TEMP --> FX
-    AK --> META
-    NFA --> CK
-    NFA --> BAP
-    PAY --> BAP
-    META --> NFA
-
-    style CHAIN fill:#f3fff6,stroke:#12b886,stroke-width:3px
-    style UI fill:#fff5f5,stroke:#FF005C,stroke-width:3px
-    style AGENTS fill:#f0f9ff,stroke:#00F0FF,stroke-width:3px
-    style MKT fill:#fffbeb,stroke:#f59e0b,stroke-width:3px
+    style CLIENT fill:#fff5f5,stroke:#FF005C,stroke-width:3px
+    style SERVICE fill:#f0f9ff,stroke:#00F0FF,stroke-width:3px
+    style DATA fill:#f3fff6,stroke:#12b886,stroke-width:3px
+    style INFRA fill:#fffbeb,stroke:#f59e0b,stroke-width:3px
 ```
 
 ---

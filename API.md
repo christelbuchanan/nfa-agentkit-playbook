@@ -44,7 +44,7 @@ graph TB
     end
 
     subgraph GATEWAY["⚡ API Gateway"]
-        KONG["Kong Gateway"]
+        NGINX["Nginx Ingress"]
         AUTH["Auth Middleware"]
         RATE["Rate Limiter"]
         CACHE["Response Cache"]
@@ -65,11 +65,11 @@ graph TB
         BAP578["BAP-578 Client"]
     end
 
-    WEB --> KONG
-    MOBILE --> KONG
-    SDK --> KONG
+    WEB --> NGINX
+    MOBILE --> NGINX
+    SDK --> NGINX
 
-    KONG --> AUTH
+    NGINX --> AUTH
     AUTH --> RATE
     RATE --> CACHE
 

@@ -85,45 +85,57 @@ All services emit structured logs, metrics, and traces for monitoring and debugg
 
 ```mermaid
 graph TB
-    subgraph PRESENTATION["🎨 Presentation Layer"]
+    subgraph CLIENT["🎨 Client Layer"]
         WEB["Web UI<br/>(Next.js)"]
         MOBILE["Mobile App<br/>(React Native)"]
         EMBED["ChatKit Embed<br/>(iframe/SDK)"]
         AVATAR["Avatar Engine<br/>(LiveKit)"]
     end
 
-    subgraph GATEWAY["⚡ API Gateway Layer"]
-        APIGW["API Gateway<br/>(Kong/Nginx)"]
+    subgraph SERVICE["⚡ Service Layer"]
+        APIGW["API Gateway<br/>(K8s/Nginx)"]
         AUTH["Auth Service<br/>(JWT/OAuth2)"]
         RATE["Rate Limiter<br/>(Redis)"]
-        CACHE["Edge Cache<br/>(CloudFlare)"]
-    end
-
-    subgraph ORCHESTRATION["🤖 Orchestration Layer"]
+        
         AGENTKIT["AgentKit Runtime<br/>(OpenAI SDK)"]
         BUILDER["Agent Builder<br/>(Graph Engine)"]
         WORKFLOW["Workflow Engine<br/>(Temporal)"]
-        ROUTER["Message Router<br/>(RabbitMQ)"]
-    end
-
-    subgraph EXECUTION["⚙️ Execution Layer"]
+        
         GPT5["GPT-5 Realtime<br/>(OpenAI API)"]
         TOOLS["Tool Executor<br/>(Sandboxed)"]
         CONNECTORS["Connector Pool<br/>(HTTP/WebSocket)"]
-        EVAL["Evals Engine<br/>(Metrics)"]
+        
+        APIGW --> AUTH
+        APIGW --> RATE
+        AUTH --> AGENTKIT
+        RATE --> AGENTKIT
+        
+        AGENTKIT --> BUILDER
+        AGENTKIT --> WORKFLOW
+        AGENTKIT --> GPT5
+        AGENTKIT --> TOOLS
+        AGENTKIT --> CONNECTORS
     end
 
     subgraph DATA["💾 Data Layer"]
         POSTGRES[("PostgreSQL<br/>(Supabase)")]
         VECTOR[("Vector DB<br/>(Pinecone)")]
-        REDIS[("Redis<br/>(Cache/Queue)")]
+        REDIS_CACHE[("Redis<br/>(Cache/Queue)")]
         IPFS[("IPFS<br/>(Assets)")]
-    end
-
-    subgraph BLOCKCHAIN["⛓️ Blockchain Layer"]
+        
         BAP578["BAP-578 Contract<br/>(Smart Contract)"]
         INDEXER["Chain Indexer<br/>(Event Listener)"]
         WALLET["Wallet Service<br/>(Key Management)"]
+        
+        BAP578 --> INDEXER
+        INDEXER --> WALLET
+    end
+
+    subgraph INFRA["🔧 Infrastructure Layer"]
+        MONITOR["Monitoring<br/>(Prometheus/Grafana)"]
+        LOGS["Log Aggregation<br/>(Loki)"]
+        TRACES["Distributed Tracing<br/>(Jaeger)"]
+        CDN["Edge Cache<br/>(CloudFlare)"]
     end
 
     WEB --> APIGW
@@ -131,53 +143,31 @@ graph TB
     EMBED --> APIGW
     AVATAR --> APIGW
     
-    APIGW --> AUTH
-    APIGW --> RATE
-    APIGW --> CACHE
-    
-    AUTH --> AGENTKIT
-    RATE --> AGENTKIT
-    CACHE --> AGENTKIT
-    
-    AGENTKIT --> BUILDER
-    AGENTKIT --> WORKFLOW
-    AGENTKIT --> ROUTER
-    
-    BUILDER --> GPT5
-    WORKFLOW --> TOOLS
-    ROUTER --> CONNECTORS
-    
-    GPT5 --> EVAL
-    TOOLS --> EVAL
-    CONNECTORS --> EVAL
-    
     AGENTKIT --> POSTGRES
     AGENTKIT --> VECTOR
-    AGENTKIT --> REDIS
+    AGENTKIT --> REDIS_CACHE
     AGENTKIT --> IPFS
-    
     AGENTKIT --> BAP578
-    BAP578 --> INDEXER
-    INDEXER --> WALLET
+    
+    SERVICE --> MONITOR
+    SERVICE --> LOGS
+    SERVICE --> TRACES
+    APIGW --> CDN
 
-    style PRESENTATION fill:#fff5f5,stroke:#FF005C,stroke-width:3px
-    style GATEWAY fill:#f0f9ff,stroke:#00F0FF,stroke-width:3px
-    style ORCHESTRATION fill:#f3fff6,stroke:#12b886,stroke-width:3px
-    style EXECUTION fill:#fffbeb,stroke:#f59e0b,stroke-width:3px
-    style DATA fill:#faf5ff,stroke:#9333ea,stroke-width:3px
-    style BLOCKCHAIN fill:#fff5f5,stroke:#FF005C,stroke-width:3px
+    style CLIENT fill:#fff5f5,stroke:#FF005C,stroke-width:3px
+    style SERVICE fill:#f0f9ff,stroke:#00F0FF,stroke-width:3px
+    style DATA fill:#f3fff6,stroke:#12b886,stroke-width:3px
+    style INFRA fill:#fffbeb,stroke:#f59e0b,stroke-width:3px
 ```
 
 ### Layer Responsibilities
 
 | Layer | Purpose | Key Technologies |
 |-------|---------|------------------|
-| **Presentation** | User interfaces & interaction | Next.js, React Native, LiveKit |
-| **Gateway** | Request routing, auth, rate limiting | Kong, Redis, CloudFlare |
-| **Orchestration** | Agent lifecycle & workflow management | AgentKit, Temporal, RabbitMQ |
-| **Execution** | AI inference & tool execution | GPT-5, Sandboxes, HTTP clients |
-| **Data** | Persistence & caching | PostgreSQL, Pinecone, Redis, IPFS |
-| **Blockchain** | On-chain identity & verification | BAP-578, Indexers, Wallets |
+| **Client** | User interfaces & interaction | Next.js, React Native, LiveKit |
+| **Service** | API gateway, orchestration & execution | Nginx, AgentKit, GPT-5, Temporal |
+| **Data** | Persistence, caching & blockchain | PostgreSQL, Pinecone, Redis, IPFS, BAP-578 |
+| **Infrastructure** | Monitoring, logging & edge services | Prometheus, Grafana, Loki, Jaeger, CloudFlare |
 
 ---
 
@@ -273,7 +263,7 @@ sequenceDiagram
 
 ---
 
-## 🔄 Data Flow Patterns
+##  Data Flow Patterns
 
 ### 1. **Conversation Flow**
 
